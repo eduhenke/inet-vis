@@ -1,6 +1,6 @@
 import { graphviz } from "d3-graphviz";
 import { useEffect, useState } from "react";
-import { INet, INode } from "./inet";
+import { INet, INode, PortLabel, isExplicitPortLabel } from "./inet";
 
 const tableBorder = 0;
 const tableCellBorder = 0;
@@ -61,6 +61,13 @@ const upTable = `
   ${doublePortTable}
 </TABLE>>, image="up.svg"]`;
 
+const upBlackTable = `
+[label=<<TABLE BORDER="${tableBorder}" CELLBORDER="${tableCellBorder}" CELLSPACING="0">
+  ${singlePortTable}
+  ${middleFillerTable}
+  ${doublePortTable}
+</TABLE>>, image="up-black.svg"]`;
+
 // Same font as in Editor
 const fontname = 'Menlo, Monaco, monospace';
 
@@ -81,7 +88,7 @@ function generateGraphvizCode(graph: Graph, showLabels: boolean) {
       .map(node => `lam_${node.idx} ${upTable}`).join('\n')}
     ${graph.nodes
       .filter(node => node.type === 'Dup')
-      .map(node => `dup_${node.idx} ${upTable.replace('up.svg', 'up-black.svg')}`).join('\n')}
+      .map(node => `dup_${node.idx} ${upBlackTable}`).join('\n')}
     ${graph.nodes
       .filter(node => node.type === 'App')
       .map(node => `app_${node.idx} ${downTable}`).join('\n')}
@@ -91,7 +98,7 @@ function generateGraphvizCode(graph: Graph, showLabels: boolean) {
     ${graph.edges.map(([from, to]) => {
       const formatPort = (port: GraphPort) => `${port.type.toLocaleLowerCase()}_${port.idx}:p${port.port}`;
       const connection = `${formatPort(from)} -> ${formatPort(to)}`;
-      return showLabels
+      return showLabels && isExplicitPortLabel(from.label)
         ? `${connection} [label="  ${from.label}", fontname="${fontname}}"]`
         : connection;
     }).join('\n')}
@@ -141,7 +148,7 @@ interface GraphNode {
   idx: number;
 }
 
-type GraphPort = GraphNode & { port: number, label: string }
+type GraphPort = GraphNode & { port: number, label: PortLabel }
 
 // Placeholder type for Graph
 interface Graph {
@@ -154,19 +161,21 @@ function fromINet(nodes: INet): Graph {
 
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
+    // We include the node itself in the search to allow for edges to other ports on the same node
     for (let j = i; j < nodes.length; j++) {
       const find = nodes[j];
 
       for (let k = 0; k < node.ports.length; k++) {
-        const port = find.ports.findIndex((port, idx) => 
+        const foundPort = find.ports.findIndex((port, idx) => 
           port === node.ports[k]
+          // Don't connect to same port on same node
           && (i !== j || idx !== k)
         );
 
-        if (port !== -1) {
+        if (foundPort !== -1) {
           edges.push([
             { type: node.type, idx: i, port: k, label: node.ports[k] },
-            { type: find.type, idx: j, port, label: node.ports[k] },
+            { type: find.type, idx: j, port: foundPort, label: node.ports[k] },
           ]);
         }
       }
