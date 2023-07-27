@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" height="50" width="100" viewbox="0 0 100 100">
+  <polygon
+    points="2,2 48,48 98,2"
+    class="triangle"
+    fill="none"
+    style="stroke:black;stroke-width:2" 
+  />
+</svg>
