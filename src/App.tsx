@@ -3,6 +3,8 @@ import { parseINet } from './parser';
 import { INet } from './inet';
 import { INetGraph } from './INetGraph';
 import { Editor } from './Editor';
+import SplitterLayout from 'react-splitter-layout';
+import 'react-splitter-layout/lib/index.css';
 
 function App() {
   const [rawCode, setRawCode] = React.useState<string>('');
@@ -13,10 +15,10 @@ function App() {
   }, [rawCode]);
 
   return (
-    <div style={{ display: "flex" }}>
+    <SplitterLayout>
       <Editor onChange={setRawCode}/>
       <INetGraph inet={inet} />
-    </div>
+    </SplitterLayout>
   );
 }
 
