@@ -1,5 +1,5 @@
 import { graphviz } from "d3-graphviz";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { INet, INode } from "./inet";
 
 const tableBorder = 0;
@@ -61,7 +61,10 @@ const upTable = `
   ${doublePortTable}
 </TABLE>>, image="up.svg"]`;
 
-function generateGraphvizCode(graph: Graph) {
+// Same font as in Editor
+const fontname = 'Menlo, Monaco, monospace';
+
+function generateGraphvizCode(graph: Graph, showLabels: boolean) {
   return  `
   digraph G {
     graph [splines=true, center=true]
@@ -85,16 +88,21 @@ function generateGraphvizCode(graph: Graph) {
   
     edge [dir=none]
 
-    ${graph.edges.map(([from, to]) =>
-      `${from.type.toLocaleLowerCase()}_${from.idx}:p${from.port} -> ${to.type.toLocaleLowerCase()}_${to.idx}:p${to.port} // [label="  ${from.label}"]`
-    ).join('\n')}
+    ${graph.edges.map(([from, to]) => {
+      const formatPort = (port: GraphPort) => `${port.type.toLocaleLowerCase()}_${port.idx}:p${port.port}`;
+      const connection = `${formatPort(from)} -> ${formatPort(to)}`;
+      return showLabels
+        ? `${connection} [label="  ${from.label}", fontname="${fontname}}"]`
+        : connection;
+    }).join('\n')}
 
   }`;
 }
 
 export function INetGraph({ inet }: { inet: INet }) {
+  const [showLabels, setShowLabels] = useState<boolean>(false);
   const graph = fromINet(inet);
-  const code = generateGraphvizCode(graph);
+  const code = generateGraphvizCode(graph, showLabels);
 
   useEffect(() => {
     graphviz(`#graphviz`, {
@@ -110,7 +118,21 @@ export function INetGraph({ inet }: { inet: INet }) {
       .renderDot(code);
   }, [code]);
 
-  return <div id="graphviz" />;
+  return <div>
+    <div id="graphviz" />
+    <div style={{
+      position: 'absolute',
+      bottom: 10,
+      right: 10,
+    }}>
+      <input
+        type="checkbox"
+        checked={showLabels}
+        onChange={e => setShowLabels(e.target.checked)}
+        />
+      <label>Show labels</label>
+    </div>
+  </div>;
 }
 
 // Placeholder type for GraphNode
@@ -119,10 +141,12 @@ interface GraphNode {
   idx: number;
 }
 
+type GraphPort = GraphNode & { port: number, label: string }
+
 // Placeholder type for Graph
 interface Graph {
-  nodes: GraphNode[];
-  edges: [GraphNode & { port: number, label: string }, GraphNode & { port: number, label: string }][];
+  nodes: Array<GraphNode>;
+  edges: Array<[GraphPort, GraphPort]>;
 }
 
 function fromINet(nodes: INet): Graph {
