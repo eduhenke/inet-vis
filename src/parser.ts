@@ -11,7 +11,11 @@ const keywordsTable = {
 type Keyword = keyof typeof keywordsTable;
 export const keywords: Keyword[] = Object.keys(keywordsTable) as any;
 
-function parseNode(input: string, typeRegex: RegExp, _hiddenLabelCounter: { c: number }): INode[] {
+type Context = {
+  _hiddenLabelCounter: number
+};
+
+function parseNode(context: Context, input: string, typeRegex: RegExp): INode[] {
   function nodeTypeFromKeyword(type: string): INode['type'] {
     if (!(type in keywordsTable)) throw new Error(`Unknown node type: ${type}`);
     return keywordsTable[type as Keyword];
@@ -31,7 +35,7 @@ function parseNode(input: string, typeRegex: RegExp, _hiddenLabelCounter: { c: n
       if (port !== '*')
         continue;
 
-      const hiddenLabel = _hiddenLabelCounter.c++;
+      const hiddenLabel = context._hiddenLabelCounter++;
       currentNodePorts[i] = hiddenLabel;
 
       const newEraseNode: INode = {
@@ -65,11 +69,11 @@ const threePortRegex = /(DUP|LAM|APP)\s*(\w+|\*)\s*(\w+|\*)\s*(\w+|\*)/g;
 
 export function parseINet(input: string): INet {
   // Use a counter object to pass by reference
-  let _hiddenLabelCounter = { c: 0 };
+  let context: Context = { _hiddenLabelCounter: 0 };
   return input.split('\n').flatMap(line =>
     [
-      ...parseNode(line, onePortRegex, _hiddenLabelCounter),
-      ...parseNode(line, threePortRegex, _hiddenLabelCounter)
+      ...parseNode(context, line, onePortRegex),
+      ...parseNode(context, line, threePortRegex)
     ]
   );
 }

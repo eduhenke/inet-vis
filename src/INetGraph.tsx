@@ -19,15 +19,15 @@ const singlePortTable = `
 </TR>
 `
 
-const doublePortTable = `
+const doublePortTable = (firstPortId: string, secondPortId: string) => `
 <TR>
   <TD>
     <TABLE BORDER="${tableBorder}" CELLBORDER="${tableCellBorder}" CELLSPACING="0">
       <TR>
         <TD HEIGHT="1" WIDTH="15" FIXEDSIZE="TRUE"></TD>
-        <TD PORT="p1" HEIGHT="1" WIDTH="1" FIXEDSIZE="TRUE"></TD>
+        <TD PORT="${firstPortId}" HEIGHT="1" WIDTH="1" FIXEDSIZE="TRUE"></TD>
         <TD HEIGHT="1" WIDTH="33" FIXEDSIZE="TRUE"></TD>
-        <TD PORT="p2" HEIGHT="1" WIDTH="1" FIXEDSIZE="TRUE"></TD>
+        <TD PORT="${secondPortId}" HEIGHT="1" WIDTH="1" FIXEDSIZE="TRUE"></TD>
         <TD HEIGHT="1" WIDTH="15" FIXEDSIZE="TRUE"></TD>
       </TR>
     </TABLE>
@@ -49,7 +49,7 @@ const middleFillerTable = `
 
 const downTable = `
 [label=<<TABLE BORDER="${tableBorder}" CELLBORDER="${tableCellBorder}" CELLSPACING="0">
-  ${doublePortTable}
+  ${doublePortTable('p2', 'p1')}
   ${middleFillerTable}
   ${singlePortTable}
 </TABLE>>, image="down.svg"]`
@@ -58,14 +58,14 @@ const upTable = `
 [label=<<TABLE BORDER="${tableBorder}" CELLBORDER="${tableCellBorder}" CELLSPACING="0">
   ${singlePortTable}
   ${middleFillerTable}
-  ${doublePortTable}
+  ${doublePortTable('p1', 'p2')}
 </TABLE>>, image="up.svg"]`;
 
 const upBlackTable = `
 [label=<<TABLE BORDER="${tableBorder}" CELLBORDER="${tableCellBorder}" CELLSPACING="0">
   ${singlePortTable}
   ${middleFillerTable}
-  ${doublePortTable}
+  ${doublePortTable('p1', 'p2')}
 </TABLE>>, image="up-black.svg"]`;
 
 // Same font as in Editor
